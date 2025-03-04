@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 require("dotenv").config();
+const mysql = require("mysql2");
+const bodyParser = require("body-parser");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,8 +10,36 @@ const PORT = process.env.PORT || 3000;
 // ใช้ body-parser อ่าน JSON
 app.use(bodyParser.json());
 
+// ตั้งค่าเชื่อมต่อ MySQL
+const db = mysql.createConnection({
+  host: "localhost", // ใส่ที่อยู่ของฐานข้อมูล
+  user: process.user, // ใส่ชื่อผู้ใช้ MySQL
+  password: process.password, // ใส่รหัสผ่าน MySQL
+  database: process.database, // ใส่ชื่อฐานข้อมูล
+});
+
+db.connect((err) => {
+  if (err) throw err;
+  console.log("Connected to MySQL database!");
+});
+
 app.get("/", (req, res) => {
   res.send("start server");
+});
+
+// สร้าง API สำหรับรับข้อมูลผู้ใช้และบันทึกลงฐานข้อมูล
+app.post("/save-user", (req, res) => {
+  const { userId, displayName, pictureUrl } = req.body;
+
+  const query =
+    "INSERT INTO users (user_id, display_name, picture_url) VALUES (?, ?, ?)";
+  db.query(query, [userId, displayName, pictureUrl], (err, result) => {
+    if (err) {
+      console.error("Error saving user to database:", err);
+      return res.status(500).send("Failed to save user");
+    }
+    res.status(200).send("User saved successfully");
+  });
 });
 
 app.post("/webhook", (req, res) => {

@@ -1,0 +1,12 @@
+CREATE DATABASE topon_RegisterFormUser;
+
+
+
+CREATE TABLE conversion (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  click_id VARCHAR(255) NOT NULL,
+  cookies_userId VARCHAR(255) NOT NULL,
+  queryString VARCHAR(255) NOT NULL,
+  line_user_id VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
