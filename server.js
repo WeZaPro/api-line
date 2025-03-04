@@ -12,23 +12,23 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // ตั้งค่าเชื่อมต่อ MySQL
-const db = mysql.createConnection({
-  host: "localhost", // ใส่ที่อยู่ของฐานข้อมูล
-  user: "root", // ใส่ชื่อผู้ใช้ MySQL
-  password: "", // ใส่รหัสผ่าน MySQL
-  database: "DB_Conversion", // ใส่ชื่อฐานข้อมูล
-});
-
 // const db = mysql.createConnection({
-//   host: process.env.host,
-//   user: process.env.user,
-//   password: process.env.password,
-//   // database: "PETIVERSE",
-//   database: process.env.database,
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0,
+//   host: "localhost", // ใส่ที่อยู่ของฐานข้อมูล
+//   user: "root", // ใส่ชื่อผู้ใช้ MySQL
+//   password: "", // ใส่รหัสผ่าน MySQL
+//   database: "DB_Conversion", // ใส่ชื่อฐานข้อมูล
 // });
+
+const db = mysql.createConnection({
+  host: process.env.host,
+  user: process.env.user,
+  password: process.env.password,
+  // database: "PETIVERSE",
+  database: process.env.database,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 db.connect((err) => {
   if (err) throw err;
