@@ -8,6 +8,10 @@ const PORT = process.env.PORT || 3000;
 // ใช้ body-parser อ่าน JSON
 app.use(bodyParser.json());
 
+app.get("/", (req, res) => {
+  res.send("start server");
+});
+
 app.post("/webhook", (req, res) => {
   const events = req.body.events;
   const _replyToken = req.body.events[0].replyToken;
