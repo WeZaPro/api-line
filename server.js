@@ -198,10 +198,12 @@ app.post("/webhook", (req, res) => {
               }
               console.log("✅ Updated line_chat_use_status to true");
             });
+
+            replyMessage(_replyToken, userId, `Your ads_code: ${ads_code}`);
           }
 
           // ✅ ตอบกลับ ads_code ไปยังผู้ใช้
-          replyMessage(_replyToken, userId, `Your ads_code: ${ads_code}`);
+          // replyMessage(_replyToken, userId, `Your ads_code: ${ads_code}`);
         } else {
           console.log("🚫 User ID not found in database");
           replyMessage(_replyToken, userId, "User ID not found.");
