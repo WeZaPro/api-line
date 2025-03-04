@@ -48,58 +48,21 @@ app.get("/", (req, res) => {
 });
 
 // สร้าง API สำหรับรับข้อมูลผู้ใช้และบันทึกลงฐานข้อมูล
-// app.post("/save-user", (req, res) => {
-//   const { click_id, cookies_userId, queryString, line_user_id } = req.body;
-
-//   const query = `INSERT INTO ${process.env.table_name} (click_id, cookies_userId, queryString,line_user_id) VALUES (?, ?, ?, ?)`;
-//   db.query(
-//     query,
-//     [click_id, cookies_userId, queryString, line_user_id],
-//     (err, result) => {
-//       if (err) {
-//         console.error("Error saving user to database:", err);
-//         return res.status(500).send("Failed to save user");
-//       }
-//       res.status(200).send("User saved successfully");
-//     }
-//   );
-// });
-
 app.post("/save-user", (req, res) => {
   const { click_id, cookies_userId, queryString, line_user_id } = req.body;
 
-  // 📌 ตรวจสอบก่อนว่า line_user_id มีอยู่ในฐานข้อมูลหรือยัง
-  const checkQuery = `SELECT COUNT(*) AS count FROM ${process.env.table_name} WHERE line_user_id = ?`;
-
-  db.query(checkQuery, [line_user_id], (err, results) => {
-    if (err) {
-      console.error("❌ Error checking user in database:", err);
-      return res.status(500).send("Database error");
-    }
-
-    const userExists = results[0].count > 0;
-
-    if (userExists) {
-      console.log("✅ User already exists in database");
-      return res.status(200).send("User already exists");
-    }
-
-    // 📌 ถ้ายังไม่มี ให้บันทึกลงฐานข้อมูล
-    const insertQuery = `INSERT INTO ${process.env.table_name} (click_id, cookies_userId, queryString, line_user_id) VALUES (?, ?, ?, ?)`;
-
-    db.query(
-      insertQuery,
-      [click_id, cookies_userId, queryString, line_user_id],
-      (err, result) => {
-        if (err) {
-          console.error("❌ Error saving user to database:", err);
-          return res.status(500).send("Failed to save user");
-        }
-        console.log("✅ User saved successfully");
-        res.status(200).send("User saved successfully");
+  const query = `INSERT INTO ${process.env.table_name} (click_id, cookies_userId, queryString,line_user_id) VALUES (?, ?, ?, ?)`;
+  db.query(
+    query,
+    [click_id, cookies_userId, queryString, line_user_id],
+    (err, result) => {
+      if (err) {
+        console.error("Error saving user to database:", err);
+        return res.status(500).send("Failed to save user");
       }
-    );
-  });
+      res.status(200).send("User saved successfully");
+    }
+  );
 });
 
 app.post("/webhook", (req, res) => {
