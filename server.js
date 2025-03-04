@@ -41,6 +41,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/save-user", (req, res) => {
+  console.log("📌 Received data:", req.body); // ✅ Debug จุดนี้
+
   const {
     click_id,
     cookies_userId,
@@ -53,7 +55,11 @@ app.post("/save-user", (req, res) => {
     fbp,
   } = req.body;
 
-  // 📌 ตรวจสอบก่อนว่า line_user_id มีอยู่ในฐานข้อมูลหรือยัง
+  // ตรวจสอบค่าที่ได้รับ
+  if (!click_id || !cookies_userId || !line_user_id) {
+    return res.status(400).send("Missing required fields");
+  }
+
   const checkQuery = `SELECT COUNT(*) AS count FROM ${process.env.table_name} WHERE line_user_id = ?`;
 
   db.query(checkQuery, [line_user_id], (err, results) => {
@@ -62,27 +68,27 @@ app.post("/save-user", (req, res) => {
       return res.status(500).send("Database error");
     }
 
-    const userExists = results[0].count > 0;
-
-    if (userExists) {
+    if (results[0].count > 0) {
       console.log("✅ User already exists in database");
       return res.status(200).send("User already exists");
     }
 
-    const insertQuery = `INSERT INTO ${process.env.table_name} (click_id, cookies_userId, queryString, line_user_id, ip_address, user_agent, ads_code, fbc, fbp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const insertQuery = `INSERT INTO ${process.env.table_name} 
+      (click_id, cookies_userId, queryString, line_user_id, ip_address, user_agent, ads_code, fbc, fbp) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.query(
       insertQuery,
       [
-        click_id,
-        cookies_userId,
-        queryString,
-        line_user_id,
-        ip_address,
-        user_agent,
-        ads_code,
-        fbc,
-        fbp,
+        click_id || "",
+        cookies_userId || "",
+        queryString || "",
+        line_user_id || "",
+        ip_address || "",
+        user_agent || "",
+        ads_code || "",
+        fbc || "",
+        fbp || "",
       ],
       (err, result) => {
         if (err) {
@@ -95,6 +101,62 @@ app.post("/save-user", (req, res) => {
     );
   });
 });
+
+// app.post("/save-user", (req, res) => {
+//   const {
+//     click_id,
+//     cookies_userId,
+//     queryString,
+//     line_user_id,
+//     ip_address,
+//     user_agent,
+//     ads_code,
+//     fbc,
+//     fbp,
+//   } = req.body;
+
+//   // 📌 ตรวจสอบก่อนว่า line_user_id มีอยู่ในฐานข้อมูลหรือยัง
+//   const checkQuery = `SELECT COUNT(*) AS count FROM ${process.env.table_name} WHERE line_user_id = ?`;
+
+//   db.query(checkQuery, [line_user_id], (err, results) => {
+//     if (err) {
+//       console.error("❌ Error checking user in database:", err);
+//       return res.status(500).send("Database error");
+//     }
+
+//     const userExists = results[0].count > 0;
+
+//     if (userExists) {
+//       console.log("✅ User already exists in database");
+//       return res.status(200).send("User already exists");
+//     }
+
+//     const insertQuery = `INSERT INTO ${process.env.table_name} (click_id, cookies_userId, queryString, line_user_id, ip_address, user_agent, ads_code, fbc, fbp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+//     db.query(
+//       insertQuery,
+//       [
+//         click_id,
+//         cookies_userId,
+//         queryString,
+//         line_user_id,
+//         ip_address,
+//         user_agent,
+//         ads_code,
+//         fbc,
+//         fbp,
+//       ],
+//       (err, result) => {
+//         if (err) {
+//           console.error("❌ Error saving user to database:", err);
+//           return res.status(500).send("Failed to save user");
+//         }
+//         console.log("✅ User saved successfully");
+//         res.status(200).send("User saved successfully");
+//       }
+//     );
+//   });
+// });
 
 app.post("/webhook", (req, res) => {
   const events = req.body.events;
