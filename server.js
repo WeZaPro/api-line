@@ -25,9 +25,9 @@ const db = mysql.createConnection({
   password: process.env.password,
   // database: "PETIVERSE",
   database: process.env.database,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  // waitForConnections: true,
+  // connectionLimit: 10,
+  // queueLimit: 0,
 });
 
 db.connect((err) => {
