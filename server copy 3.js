@@ -101,7 +101,6 @@ app.post("/webhook", (req, res) => {
   const _replyToken = req.body.events[0].replyToken;
 
   console.log(`👤 _replyToken: ${_replyToken}`);
-
   events.forEach((event) => {
     if (event.type === "message") {
       const userId = event.source.userId;
@@ -110,67 +109,13 @@ app.post("/webhook", (req, res) => {
       console.log(`👤 LINE User ID: ${userId}`);
       console.log(`💬 Message: ${messageText}`);
 
-      // 📌 ค้นหา userId ในฐานข้อมูล
-      const query = `SELECT ads_code, line_chat_use_status FROM ${process.env.table_name} WHERE line_user_id = ?`;
-
-      db.query(query, [userId], (err, results) => {
-        if (err) {
-          console.error("❌ Database error:", err);
-          return res.sendStatus(500);
-        }
-
-        if (results.length > 0) {
-          const { ads_code, line_chat_use_status } = results[0];
-
-          if (line_chat_use_status === 0) {
-            // ถ้าเป็น false (0)
-            const updateQuery = `UPDATE ${process.env.table_name} SET line_chat_use_status = 1 WHERE line_user_id = ?`;
-
-            db.query(updateQuery, [userId], (updateErr) => {
-              if (updateErr) {
-                console.error(
-                  "❌ Error updating line_chat_use_status:",
-                  updateErr
-                );
-                return res.sendStatus(500);
-              }
-              console.log("✅ Updated line_chat_use_status to true");
-            });
-          }
-
-          // ✅ ตอบกลับ ads_code ไปยังผู้ใช้
-          replyMessage(_replyToken, userId, `Your ads_code: ${ads_code}`);
-        } else {
-          console.log("🚫 User ID not found in database");
-          replyMessage(_replyToken, userId, "User ID not found.");
-        }
-      });
+      // ✅ ตอบกลับผู้ใช้
+      replyMessage(_replyToken, userId, `Hello! Your LINE ID is: ${userId}`);
     }
   });
 
-  res.sendStatus(200);
+  res.sendStatus(200); // ตอบกลับ LINE ว่ารับข้อมูลแล้ว
 });
-
-// app.post("/webhook", (req, res) => {
-//   const events = req.body.events;
-//   const _replyToken = req.body.events[0].replyToken;
-
-//   console.log(`👤 _replyToken: ${_replyToken}`);
-//   events.forEach((event) => {
-//     if (event.type === "message") {
-//       const userId = event.source.userId;
-//       const messageText = event.message.text;
-
-//       console.log(`👤 LINE User ID: ${userId}`);
-//       console.log(`💬 Message: ${messageText}`);
-
-//       // ✅ ตอบกลับผู้ใช้
-//       replyMessage(_replyToken, userId, `Hello! Your LINE ID is: ${userId}`);
-//     }
-//   });
-
-//   res.sendStatus(200); // ตอบกลับ LINE ว่ารับข้อมูลแล้ว
-// });
 
 // 📌 ฟังก์ชันตอบกลับข้อความไปยัง LINE
 const axios = require("axios");
