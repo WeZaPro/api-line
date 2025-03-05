@@ -44,7 +44,9 @@ app.post("/save-user", (req, res) => {
   console.log("📌 Received data:", req.body); // ✅ Debug จุดนี้
 
   const {
-    click_id,
+    fb_click_id, //fbclid
+    google_click_id, //GCLID
+    tiktok_click_id, //TTCID
     cookies_userId,
     queryString,
     line_user_id,
@@ -74,13 +76,15 @@ app.post("/save-user", (req, res) => {
     }
 
     const insertQuery = `INSERT INTO ${process.env.table_name} 
-      (click_id, cookies_userId, queryString, line_user_id, ip_address, user_agent, ads_code, fbc, fbp) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      (fb_click_id,google_click_id,tiktok_click_id, cookies_userId, queryString, line_user_id, ip_address, user_agent, ads_code, fbc, fbp) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?)`;
 
     db.query(
       insertQuery,
       [
-        click_id || "",
+        fb_click_id || "",
+        google_click_id || "",
+        tiktok_click_id || "",
         cookies_userId || "",
         queryString || "",
         line_user_id || "",

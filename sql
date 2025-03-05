@@ -4,7 +4,9 @@ CREATE DATABASE DB_Conversion;
 
 CREATE TABLE conversion (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  click_id VARCHAR(255) NOT NULL,
+  fb_click_id VARCHAR(255) NOT NULL,
+  google_click_id VARCHAR(255) NOT NULL,
+  tiktok_click_id VARCHAR(255) NOT NULL,
   cookies_userId VARCHAR(255) NOT NULL,
   ip_address VARCHAR(255) NOT NULL,
   user_agent VARCHAR(255) NOT NULL,
