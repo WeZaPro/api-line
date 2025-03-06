@@ -1,0 +1,129 @@
+<script>
+  // ตัวอย่างการตั้งคุกกี้
+  setCookie("user_session", "1234567890", 30);
+  // เรียกใช้ฟังก์ชันเพื่อดึงค่าคุกกี้
+  var userSession = getCookie("user_session");
+  console.log("userSession ", userSession);
+
+  var ga = getCookie("_ga");
+  console.log("ga ", ga);
+
+  // ดึง clientId
+  var clientId = getClientId();
+  console.log("Client ID: ", clientId);
+
+  // ดึงค่า '_fbp'
+  var fbpValue = getFbp();
+  console.log("FBP: ", fbpValue);
+
+  // เรียกใช้ฟังก์ชันเพื่อสร้าง Session ID
+  createSessionID();
+
+  // ตรวจสอบการดึงค่า
+  //   console.log("Client ID: ", getClientId());
+  //   console.log("FBP: ", getFbp());
+  // ==================================================
+  fetchData(
+    "http:/localhost:3000/get-query-param?utm_source=google",
+    function (data) {
+      console.log("Query Params:>>>>>>>", data);
+    }
+  );
+  // ==================================================
+  function fetchData(apiUrl, callback) {
+    fetch(apiUrl)
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        callback(data);
+      })
+      .catch(function (error) {
+        console.error("Error:", error);
+        callback(null);
+      });
+  }
+
+  //=*****************************************
+  // ฟังก์ชันเพื่อสร้าง Session ID
+  function createSessionID() {
+    var sessionID = "xxxxxxxxxxxx".replace(/[x]/g, function () {
+      return Math.floor(Math.random() * 10).toString();
+    });
+
+    // เซ็ตคุกกี้ "session_id" ในเบราว์เซอร์
+    document.cookie = "session_id=" + sessionID + "; path=/; SameSite=Strict";
+
+    // ส่งค่า sessionID ไปยัง Data Layer ของ GTM
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "sessionCreated",
+      sessionID: sessionID,
+    });
+
+    console.log("Session ID created: " + sessionID);
+  }
+
+  //=*****************************************
+  // ฟังก์ชันเพื่อดึงค่าคุกกี้ '_ga' และแยก 'clientId'
+  function getClientId() {
+    var gaCookie = document.cookie.split("; ").find(function (cookie) {
+      return cookie.startsWith("_ga");
+    });
+
+    if (gaCookie) {
+      // แยก clientId จากคุกกี้ '_ga'
+      var cookieParts = gaCookie.split(".");
+      if (cookieParts.length > 2) {
+        var clientId = cookieParts[2] + "." + cookieParts[3]; // Client ID ที่เราต้องการ
+        return clientId;
+      }
+    }
+    return "unknown"; // หากไม่พบคุกกี้
+  }
+  //=*****************************************
+  // ฟังก์ชันเพื่อดึงค่าคุกกี้ '_fbp' จากเบราว์เซอร์
+  function getFbp() {
+    var fbpCookie = document.cookie.split("; ").find(function (cookie) {
+      return cookie.startsWith("_fbp");
+    });
+
+    // หากพบคุกกี้ '_fbp' จะทำการแยกค่าและส่งออก
+    if (fbpCookie) {
+      return fbpCookie.split("=")[1]; // คืนค่าคุกกี้ '_fbp'
+    } else {
+      return ""; // หากไม่พบคุกกี้
+    }
+  }
+
+  //=*****************************************
+
+  function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000); // แปลงเป็นมิลลิวินาที
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/"; // ตั้งคุกกี้
+  }
+  //=*****************************************
+
+  // ฟังก์ชันเพื่อดึงค่าคุกกี้จากชื่อคุกกี้ที่ให้มา
+  function getCookie(name) {
+    var cookieName = name + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var cookies = decodedCookie.split(";");
+
+    for (var i = 0; i < cookies.length; i++) {
+      var c = cookies[i];
+      while (c.charAt(0) == " ") {
+        c = c.substring(1); // ลบช่องว่างที่หน้าคุกกี้
+      }
+      if (c.indexOf(cookieName) == 0) {
+        return c.substring(cookieName.length, c.length); // ส่งค่าคุกกี้
+      }
+    }
+    return null; // ถ้าไม่พบคุกกี้
+  }
+</script>

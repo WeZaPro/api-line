@@ -1,0 +1,202 @@
+<script>
+  (function () {
+    // Customer ID
+    var customerId = "doctorgarn";
+
+    // Function to get GA Session ID
+    function getGA() {
+      var cookieName = "_ga"; // Default GA4 cookie
+      var cookies = document.cookie.split("; ");
+      for (var i = 0; i < cookies.length; i++) {
+        var parts = cookies[i].split("=");
+        if (parts[0] === cookieName) {
+          var cookieValue = parts[1].split(".");
+          return cookieValue.length > 2 ? cookieValue[2] : null; // The session ID is the 3rd part of the GA cookie
+        }
+      }
+      return null;
+    }
+
+    // Function to get query parameter from URL
+    function getQueryParam(param) {
+      var queryString = window.location.search;
+      var urlParams = new URLSearchParams(queryString);
+      return urlParams.get(param);
+    }
+
+    // Function to set cookies
+    function setCookie(name, value, days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000); // Set cookie expiration
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    // Function to get cookies
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(";");
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == " ") c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    // Check and set userId in cookies
+    function checkAndSetUserId(cookie_name) {
+      var userId = getCookie("convUserId"); // Get userId from cookies
+      if (!userId) {
+        // If no userId
+        userId = cookie_name; // Generate new userId
+        setCookie("convUserId", userId, 365); // Set userId in cookies for 1 year
+        console.log("New userId set in cookies:", userId);
+      } else {
+        console.log("Existing userId found in cookies:", userId);
+      }
+    }
+
+    // Function to get IP address
+    function getIP() {
+      return fetch("https://api.ipify.org?format=json")
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          var ipAddress = data.ip;
+          return ipAddress; // Return IP Address
+        })
+        .catch(function (error) {
+          console.error("Error:", error);
+        });
+    }
+
+    // Function to get Client ID from GA cookie
+    function getClientId() {
+      var gaCookie = getCookie("_ga"); // Use _ga cookie
+      if (gaCookie) {
+        var clientId = gaCookie.split(".").slice(2, 4).join("."); // Extract and join Client ID
+        return clientId;
+      }
+      return "unknown"; // If no Client ID found
+    }
+    // ปรับเรื่อง session id Start
+    function createSessionID() {
+      //   var sessionID = "xxxx-xxxx-xxxx".replace(/[x]/g, function () {
+      //     return Math.floor(Math.random() * 16).toString(16);
+      //   });
+      var sessionID = "xxxxxxxxxxxx".replace(/[x]/g, function () {
+        return Math.floor(Math.random() * 10).toString(); // สุ่มเลข 0-9
+      });
+      document.cookie = "session_id=" + sessionID + "; path=/";
+      return sessionID;
+    }
+
+    function getFbp() {
+      var name = "_fbp=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(";");
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === " ") {
+          c = c.substring(1); // กำจัดช่องว่างที่อยู่หน้าคุกกี้
+        }
+        if (c.indexOf(name) === 0) {
+          return c.substring(name.length, c.length); // คืนค่าของ fbp
+        }
+      }
+      return "";
+    }
+
+    // Parameters
+    var ga4SessionId = getGA(); // Get GA4 Session ID
+    var newSessionId = "";
+    if (ga4SessionId == null) {
+      newSessionId = createSessionID();
+    } else {
+      newSessionId = ga4SessionId;
+    }
+    var fbp = getFbp();
+    var fbclid_source = getQueryParam("fbclid");
+    var gclid_source = getQueryParam("gclid");
+    var ttclid_source = getQueryParam("ttclid");
+    var utm_source = getQueryParam("utm_source");
+    var utm_medium = getQueryParam("utm_medium");
+    var utm_campaign = getQueryParam("utm_campaign");
+    var utm_term = getQueryParam("utm_term");
+    var gg_keyword = getQueryParam("googkeyword");
+    console.log("ga4SessionId>>>>", ga4SessionId);
+    console.log("newSessionId>>>>", newSessionId);
+
+    // Info
+    var _ipAddess = "";
+    var _userAgent = "";
+    var _clientID = "";
+    getIP().then(function (ipAddress) {
+      _ipAddess = ipAddress;
+      _userAgent = navigator.userAgent;
+      _clientID = getClientId();
+
+      //var convUserId = customerId + "_" + _clientID + "_" + _ipAddess;
+      var convUserId = customerId + "_" + _ipAddess;
+      checkAndSetUserId(convUserId);
+
+      // Get cookies and save to DB
+      var savedb = getCookie("save_db");
+      console.log("saveDB", savedb);
+
+      if (savedb == "true") {
+        console.log("save already");
+      } else if (utm_source == null && utm_source == "") {
+        console.log("cannot save data is null");
+      } else {
+        console.log("save data");
+        // fetch("https://node-conv-api-production.up.railway.app/saveDataInfo", {
+        fetch("http://localhost:3000/save-gtm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerID: customerId,
+            convUserId: convUserId,
+            fbclid_source: fbclid_source,
+            gclid_source: gclid_source,
+            ttclid_source: ttclid_source,
+            userAgent: _userAgent,
+            ipAddess: _ipAddess,
+            clientID: _clientID,
+            utm_source: utm_source,
+            utm_medium: utm_medium,
+            utm_campaign: utm_campaign,
+            utm_term: utm_term,
+            gg_keyword: gg_keyword,
+            session_id: newSessionId,
+            fbp: fbp,
+            // session_id: ga4SessionId,
+          }), // Send data in JSON format
+        })
+          .then(function (response) {
+            setCookie("save_db", true, 365);
+            console.log("Data saved successfully");
+            console.log("response.json()", response.json());
+          })
+          .catch(function (error) {
+            console.error("Error:", error);
+          });
+      }
+    });
+
+    // Send data to Data Layer
+    window.dataLayer = window.dataLayer || [];
+
+    window.dataLayer.push({
+      event: "sessionData",
+      session_id: ga4SessionId,
+    });
+  })();
+</script>

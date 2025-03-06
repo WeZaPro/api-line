@@ -1,0 +1,64 @@
+<script>
+  // ตัวอย่างการตั้งคุกกี้
+  setCookie("user_session", "1234567890", 30);
+  // เรียกใช้ฟังก์ชันเพื่อดึงค่าคุกกี้
+  var userSession = getCookie("user_session");
+  console.log("userSession ", userSession);
+
+  // เรียกใช้ API ต่างๆ
+  fetchData("http:/localhost:3000/get-ga", function (data) {
+    console.log("GA Value:>>>>>>", data.gaValue);
+  });
+
+  fetchData(
+    "http:/localhost:3000/get-query-param?utm_source=google",
+    function (data) {
+      console.log("Query Params:>>>>>>>", data);
+    }
+  );
+  // ==================================================
+  function fetchData(apiUrl, callback) {
+    fetch(apiUrl)
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        callback(data);
+      })
+      .catch(function (error) {
+        console.error("Error:", error);
+        callback(null);
+      });
+  }
+
+  //=*****************************************
+
+  function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000); // แปลงเป็นมิลลิวินาที
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/"; // ตั้งคุกกี้
+  }
+  //=*****************************************
+
+  // ฟังก์ชันเพื่อดึงค่าคุกกี้จากชื่อคุกกี้ที่ให้มา
+  function getCookie(name) {
+    var cookieName = name + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var cookies = decodedCookie.split(";");
+
+    for (var i = 0; i < cookies.length; i++) {
+      var c = cookies[i];
+      while (c.charAt(0) == " ") {
+        c = c.substring(1); // ลบช่องว่างที่หน้าคุกกี้
+      }
+      if (c.indexOf(cookieName) == 0) {
+        return c.substring(cookieName.length, c.length); // ส่งค่าคุกกี้
+      }
+    }
+    return null; // ถ้าไม่พบคุกกี้
+  }
+</script>

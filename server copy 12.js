@@ -4,15 +4,10 @@ require("dotenv").config();
 const mysql = require("mysql2");
 const cors = require("cors");
 const axios = require("axios");
-const requestIp = require("request-ip");
-const cookieParser = require("cookie-parser");
 const sendToFacebookConversionAPI = require("./sendtoFb");
 
 const app = express();
 app.use(cors());
-app.use(requestIp.mw()); // Middleware ดึง IP ของ Client
-app.use(cookieParser());
-
 const PORT = process.env.PORT || 3000;
 
 // ตั้งค่า Facebook Conversion API
@@ -71,10 +66,9 @@ app.post("/save-gtm", async (req, res) => {
       fb_testCode = "none",
       event_name = "none",
       event_id = "none",
-      ads_number = "none",
     } = req.body;
-    // console.log("Received data:", req.body);
-    // console.log("ipAddress 1:", req.body.ipAddress);
+    console.log("Received data:", req.body);
+    console.log("ipAddress 1:", req.body.ipAddress);
     //
     var _fbc = fbclid_source
       ? `fb.1.${Date.now()}.${fbclid_source}`
@@ -134,8 +128,7 @@ app.post("/save-gtm", async (req, res) => {
         if (result.length > 0) {
           // If customerID exists, do not insert and send a response
           console.log("convUserId already exists.");
-          // return res.status(400).json({ error: "convUserId already exists" });
-          return res.status(200).json({ message: "convUserId already exists" });
+          return res.status(400).json({ error: "convUserId already exists" });
         } else {
           // If customerID does not exist, proceed with insert
           const insertQuery = `
@@ -157,9 +150,8 @@ app.post("/save-gtm", async (req, res) => {
             fbc,
             fbp,
             line_user_id,
-            event_name,
-            ads_number
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            event_name
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
           const values = [
@@ -181,7 +173,6 @@ app.post("/save-gtm", async (req, res) => {
             fbp,
             "no",
             event_name,
-            ads_number,
           ];
 
           console.log("Insert query:", insertQuery);
@@ -265,6 +256,29 @@ app.post("/webhook", (req, res) => {
   res.sendStatus(200);
 });
 
+// app.post("/webhook", (req, res) => {
+//   const events = req.body.events;
+//   const _replyToken = req.body.events[0].replyToken;
+
+//   console.log(`👤 _replyToken: ${_replyToken}`);
+//   events.forEach((event) => {
+//     if (event.type === "message") {
+//       const userId = event.source.userId;
+//       const messageText = event.message.text;
+
+//       console.log(`👤 LINE User ID: ${userId}`);
+//       console.log(`💬 Message: ${messageText}`);
+
+//       // ✅ ตอบกลับผู้ใช้
+//       replyMessage(_replyToken, userId, `Hello! Your LINE ID is: ${userId}`);
+//     }
+//   });
+
+//   res.sendStatus(200); // ตอบกลับ LINE ว่ารับข้อมูลแล้ว
+// });
+
+// 📌 ฟังก์ชันตอบกลับข้อความไปยัง LINE
+
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN; // 🔑 ใส่ Token ของคุณ
 
 const replyMessage = (_replyToken, userId, text) => {
@@ -283,15 +297,6 @@ const replyMessage = (_replyToken, userId, text) => {
     }
   );
 };
-
-function getQueryParam(req, res) {
-  const queryParams = req.query;
-  res.json(queryParams);
-}
-
-app.get("/get-query-param", getQueryParam);
-
-// gtm =========================== end
 
 app.listen(PORT, () => {
   console.log(`🚀 Webhook server running on http://localhost:${PORT}`);

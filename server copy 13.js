@@ -5,13 +5,11 @@ const mysql = require("mysql2");
 const cors = require("cors");
 const axios = require("axios");
 const requestIp = require("request-ip");
-const cookieParser = require("cookie-parser");
 const sendToFacebookConversionAPI = require("./sendtoFb");
 
 const app = express();
 app.use(cors());
 app.use(requestIp.mw()); // Middleware ดึง IP ของ Client
-app.use(cookieParser());
 
 const PORT = process.env.PORT || 3000;
 
@@ -71,10 +69,9 @@ app.post("/save-gtm", async (req, res) => {
       fb_testCode = "none",
       event_name = "none",
       event_id = "none",
-      ads_number = "none",
     } = req.body;
-    // console.log("Received data:", req.body);
-    // console.log("ipAddress 1:", req.body.ipAddress);
+    console.log("Received data:", req.body);
+    console.log("ipAddress 1:", req.body.ipAddress);
     //
     var _fbc = fbclid_source
       ? `fb.1.${Date.now()}.${fbclid_source}`
@@ -134,8 +131,7 @@ app.post("/save-gtm", async (req, res) => {
         if (result.length > 0) {
           // If customerID exists, do not insert and send a response
           console.log("convUserId already exists.");
-          // return res.status(400).json({ error: "convUserId already exists" });
-          return res.status(200).json({ message: "convUserId already exists" });
+          return res.status(400).json({ error: "convUserId already exists" });
         } else {
           // If customerID does not exist, proceed with insert
           const insertQuery = `
@@ -157,9 +153,8 @@ app.post("/save-gtm", async (req, res) => {
             fbc,
             fbp,
             line_user_id,
-            event_name,
-            ads_number
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            event_name
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
           const values = [
@@ -181,7 +176,6 @@ app.post("/save-gtm", async (req, res) => {
             fbp,
             "no",
             event_name,
-            ads_number,
           ];
 
           console.log("Insert query:", insertQuery);
@@ -284,14 +278,15 @@ const replyMessage = (_replyToken, userId, text) => {
   );
 };
 
-function getQueryParam(req, res) {
-  const queryParams = req.query;
-  res.json(queryParams);
-}
-
-app.get("/get-query-param", getQueryParam);
-
-// gtm =========================== end
+// gtm
+app.get("/get-ip", (req, res) => {
+  const ip =
+    req.clientIp ||
+    req.headers["x-forwarded-for"] ||
+    req.connection.remoteAddress;
+  console.log("ip---> ", ip);
+  res.json({ ip: ip });
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Webhook server running on http://localhost:${PORT}`);

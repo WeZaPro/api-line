@@ -1,0 +1,150 @@
+<script>
+  (function () {
+    var customerId = "BornToWee";
+
+    function getGA() {
+      var cookieName = "_ga";
+      var cookies = document.cookie.split("; ");
+      for (var i = 0; i < cookies.length; i++) {
+        var parts = cookies[i].split("=");
+        if (parts[0] === cookieName) {
+          var cookieValue = parts[1].split(".");
+          return cookieValue.length > 2 ? cookieValue[2] : null;
+        }
+      }
+      return null;
+    }
+
+    function getQueryParam(param) {
+      var queryString = window.location.search;
+      var urlParams = new URLSearchParams(queryString);
+      return urlParams.get(param);
+    }
+
+    function setCookie(name, value, days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(";");
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(nameEQ) === 0)
+          return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    function createSessionID() {
+      var sessionID = "xxxxxxxxxxxx".replace(/[x]/g, function () {
+        return Math.floor(Math.random() * 10).toString();
+      });
+      document.cookie = "session_id=" + sessionID + "; path=/";
+      return sessionID;
+    }
+
+    function getFbp() {
+      return getCookie("_fbp") || "";
+    }
+
+    function getClientId() {
+      var gaCookie = getCookie("_ga");
+      if (gaCookie) {
+        return gaCookie.split(".").slice(2, 4).join(".");
+      }
+      return "unknown";
+    }
+
+    function getIP(callback) {
+      fetch("https://api.ipify.org?format=json")
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          callback(data.ip);
+        })
+        .catch(function (error) {
+          console.error("Error:", error);
+          callback("unknown");
+        });
+    }
+
+    var ga4SessionId = getGA();
+    var newSessionId = ga4SessionId ? ga4SessionId : createSessionID();
+    var fbp = getFbp();
+    var fbclid_source = getQueryParam("fbclid");
+    var gclid_source = getQueryParam("gclid");
+    var ttclid_source = getQueryParam("ttclid");
+    var utm_source = getQueryParam("utm_source");
+    var utm_medium = getQueryParam("utm_medium");
+    var utm_campaign = getQueryParam("utm_campaign");
+    var utm_term = getQueryParam("utm_term");
+    var gg_keyword = getQueryParam("googkeyword");
+    var ads_number = getQueryParam("ads_number");
+    var fb_token =
+      "EAA0K2b09n5MBOZBceDQB6r2uEnmAIZA3CMwDGKYgFVs8QeOXZA6hG6VinxBO039Lk3rnsp8hDKDG94snpM5zTj7hLSLD652kZAFf5RNJkFZClVKsaTkDSrZCUtxNnkZCi0WOe0iCHiXdwc0QZAuU9WZAVUv10VNF4Mt70Uob5VJvn6bM88ZCoYxrV5V1xzqrZAgiRHVBQZDZD"; // ตรวจสอบว่าไม่หมดอายุ
+    var fb_pixel = "933503018995201";
+    var fb_testCode = "TEST84102";
+    var event_id = {{div-Unique_event_Id}};
+
+    getIP(function (ipAddress) {
+      console.log("IP Address:", ipAddress);
+
+      var userAgent = navigator.userAgent;
+      var clientID = getClientId();
+
+      var storedConvUserId = localStorage.getItem("convUserId");
+      if (!storedConvUserId) {
+        storedConvUserId = customerId + "_" + ipAddress;
+        localStorage.setItem("convUserId", storedConvUserId);
+      }
+
+      fetch("http://localhost:3000/save-gtm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerID: customerId,
+          convUserId: storedConvUserId,
+          fbclid_source: fbclid_source,
+          gclid_source: gclid_source,
+          ttclid_source: ttclid_source,
+          userAgent: userAgent,
+          ipAddress: ipAddress,
+          clientID: clientID,
+          utm_source: utm_source,
+          utm_medium: utm_medium,
+          utm_campaign: utm_campaign,
+          utm_term: utm_term,
+          gg_keyword: gg_keyword,
+          session_id: newSessionId,
+          fbp: fbp,
+          fb_token: fb_token,
+          fb_pixel: fb_pixel,
+          fb_testCode: fb_testCode,
+          event_name: "ContactGtm",
+          event_id:event_id,
+          ads_number:ads_number,
+        }),
+      })
+        .then(function (response) {
+          console.log("✅ Data sent successfully");
+        })
+        .catch(function (error) {
+          console.error("❌ Error:", error);
+        });
+    });
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "sessionData",
+      session_id: ga4SessionId,
+    });
+  })();
+</script>
